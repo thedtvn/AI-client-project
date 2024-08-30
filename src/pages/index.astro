@@ -1,0 +1,77 @@
+---
+import Layout from "../layouts/main_page.astro";
+import AiBall from "../components/ai_ball.astro";
+import ResizeInput from "../components/resize_input.astro";
+import SendButton from "../components/send_btn.astro";
+---
+
+<Layout>
+	<link
+		rel="stylesheet"
+		href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.6.1/github-markdown-dark.css"
+	/>
+	<div id="main_chat_root">
+		<AiBall />
+		<div id="main_chat"></div>
+	</div>
+	<div id="input_root">
+		<ResizeInput />
+		<SendButton />
+	</div>
+	<script>
+		import "../components/chat_mess";
+		send.addEventListener("click", async () => {
+			send.disabled = true;
+			let bot = document.createElement("chat-message");
+			main_chat.appendChild(bot);
+			let text = "Hello, I am the bot. How can I help you?";
+			let out = "";
+			for (let i of text) {
+				out += i;
+				bot.init(out, true);
+				await new Promise(r => setTimeout(r, 10));
+			}
+			send.disabled = false;
+		})
+		
+	</script>
+	<style is:global>
+		/* user to bypass the markdown css */
+		.message {
+			width: 80% !important;
+			background-color: rgba(80, 80, 80, 0.584) !important;
+			height: auto;
+			margin-top: 10px !important;
+			margin-bottom: 10px !important;
+			border-radius: 5px !important;
+			padding: 5px !important;
+		}
+	</style>
+	<style>
+		#main_chat {
+			margin: 10px;
+			margin-top: 20px;
+			max-width: 100%;
+			height: 93%;
+			overflow-x: hidden;
+			display: flex;
+			flex-direction: column;
+			justify-content: end;
+		}
+
+
+		#input_root {
+			width: 100%;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+
+		#main_chat_root {
+			height: 100%;
+			width: 100%;
+			margin-top: 50px;
+
+		}
+	</style>
+</Layout>

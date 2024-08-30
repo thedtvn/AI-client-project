@@ -1,0 +1,31 @@
+<button id="send">
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="1.5em"
+        height="1.5em"
+        viewBox="0 0 24 24"
+        ><path
+            fill="white"
+            d="M13 20h-2V8l-5.5 5.5l-1.42-1.42L12 4.16l7.92 7.92l-1.42 1.42L13 8z"
+        ></path></svg
+    >
+</button>
+<style>
+    #send {
+        width: 40px;
+        height: 40px;
+        border: none;
+        background-color: rgba(162, 160, 160, 0.255);
+        border-radius: 50px;
+        transition: ease-in-out 0.1s;
+    }
+
+    #send:active {
+        background-color: #62626290;
+        transform: scale(0.93);
+    }
+
+    #send:disabled {
+        background-color: #37373790;
+    }
+</style>

@@ -1,0 +1,53 @@
+---
+
+---
+
+<textarea id="input" autocomplete="off"></textarea>
+<script>
+    function resize_textarea() {
+        this.style.height = "auto";
+        let rows = this.value.split("\n").length;
+        if (rows == 1) {
+            this.removeAttribute("style");
+            return;
+        }
+        const maxHeight = (this.scrollHeight / rows) * 10;
+        if (this.scrollHeight > maxHeight) {
+            this.style.height = maxHeight + "px";
+        } else {
+            this.style.height = this.scrollHeight + "px";
+        }
+    }
+    let input = document.getElementById("input");
+    input.addEventListener("input", resize_textarea);
+</script>
+<style>
+    #input::-webkit-scrollbar-track {
+        -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+        background-color: rgba(245, 245, 245, 0);
+    }
+
+    #input::-webkit-scrollbar {
+        width: 10px;
+        background-color: transparent;
+    }
+
+    #input::-webkit-scrollbar-thumb {
+        margin-left: 4px;
+        background-color: #5a5a5a90;
+        margin-top: 3px;
+        border-radius: 5px;
+    }
+
+    #input {
+        resize: none;
+        padding: 5px;
+        font-size: larger;
+        margin: 10px;
+        margin-left: 0px;
+        min-height: 35px;
+        border: none;
+        border-radius: 5px;
+        background-color: #5a5a5a90;
+    }
+</style>

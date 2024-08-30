@@ -1,0 +1,103 @@
+---
+
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<style is:inline>
+			@import url("https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap");
+
+			* {
+				color: #f1f1f1;
+				font-family: Ubuntu, sans-serif;
+			}
+		</style>
+		<style>
+			@keyframes animate {
+				0% {
+					opacity: 0;
+				}
+
+				100% {
+					opacity: 1;
+				}
+			}
+
+			#root {
+				display: flex;
+				flex-direction: column;
+				width: 100%;
+				height: 100%;
+				background-color: #191919cd;
+				border: #f1f1f1 1px solid;
+				border-radius: 15px;
+				animation: animate ease-in 0.2s;
+			}
+
+			html,
+			body {
+				box-sizing: border-box;
+				padding: 2px;
+				height: 100%;
+				margin: 0;
+				background-color: #00000000;
+			}
+
+			.titlebar {
+				height: 30px;
+				width: 100%;
+				background: transparent;
+				user-select: none;
+				display: flex;
+				justify-content: flex-end;
+				position: fixed;
+			}
+
+			.titlebar-button {
+				margin-right: 14px;
+				margin-top: 6px;
+				display: inline-flex;
+				justify-content: center;
+				align-items: center;
+				width: 30px;
+				height: 30px;
+				transition: all 0.3s ease-in-out;
+				border-radius: 20%;
+			}
+
+			.titlebar-button:hover {
+				background: #adadad5f;
+			}
+		</style>
+	</head>
+
+	<body data-sveltekit-preload-data="hover">
+		<div data-tauri-drag-region class="titlebar">
+			<div class="titlebar-button" id="titlebar-close">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="1em"
+					height="1em"
+					viewBox="0 0 24 24"
+					><path
+						fill="white"
+						d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z"
+					></path></svg
+				>
+			</div>
+		</div>
+		<script>
+			import { appWindow } from "@tauri-apps/api/window";
+			document
+				.getElementById("titlebar-close")
+				.addEventListener("click", () => appWindow.close());
+		</script>
+		<div id="root">
+			<slot />
+		</div>
+	</body>
+</html>
