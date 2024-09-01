@@ -1,0 +1,5 @@
+[workspace]
+members = [
+  "ai_plugin_helper"
+]
+resolver = "2"
