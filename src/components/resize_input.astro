@@ -9,6 +9,7 @@
         let rows = this.value.split("\n").length;
         if (rows == 1) {
             this.removeAttribute("style");
+            chat_box.removeAttribute("style");
             return;
         }
         const maxHeight = (this.scrollHeight / rows) * 10;
@@ -17,28 +18,12 @@
         } else {
             this.style.height = this.scrollHeight + "px";
         }
+        chat_box.setAttribute("style", `height: calc(90% - (${input_root.offsetHeight}px + 10px));`);
     }
     let input = document.getElementById("input");
     input.addEventListener("input", resize_textarea);
 </script>
 <style>
-    #input::-webkit-scrollbar-track {
-        -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
-        background-color: rgba(245, 245, 245, 0);
-    }
-
-    #input::-webkit-scrollbar {
-        width: 10px;
-        background-color: transparent;
-    }
-
-    #input::-webkit-scrollbar-thumb {
-        margin-left: 4px;
-        background-color: #5a5a5a90;
-        margin-top: 3px;
-        border-radius: 5px;
-    }
-
     #input {
         resize: none;
         padding: 5px;

@@ -25,23 +25,26 @@ import SendButton from "../components/send_btn.astro";
 	</div>
 	<script>
 		import "../components/chat_mess";
-		send.addEventListener("click", async () => {
-			send.disabled = true;
+		import { listen } from '@tauri-apps/api/event';
+		import { invoke } from '@tauri-apps/api/tauri';
+		let message_map = {};
+
+		function init_new_message() {
 			let bot = document.createElement("chat-message");
 			main_chat.appendChild(bot);
-			
-			let text = "Hello, I am the bot. How can I help you?";
-			let out = "";
-			for (let i of text) {
-				out += i;
-				bot.init(out, true);
-				await new Promise(r => setTimeout(r, 10));
-			}
-			send.disabled = false;
-
-			chat_container.scrollTop = chat_container.scrollHeight;
-		})
+			return bot;
+		}
 		
+		await listen('message', async (event) => {
+			console.log(event.payload)
+			chat_container.scrollTop = chat_container.scrollHeight;
+		});
+
+		send.addEventListener("click", async () => {
+			send.disabled = true;
+			await invoke('new_message', { text: input.value });
+			send.disabled = false;
+		})
 	</script>
 	<style is:global>
 		/* user to bypass the markdown css */
