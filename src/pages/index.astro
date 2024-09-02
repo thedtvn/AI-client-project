@@ -35,14 +35,14 @@ import SendButton from "../components/send_btn.astro";
 			return bot;
 		}
 		
-		await listen('message', async (event) => {
-			console.log(event.payload)
+		listen('message', (event) => {
+			console.log(event.payload);
 			chat_container.scrollTop = chat_container.scrollHeight;
-		});
+		})
 
 		send.addEventListener("click", async () => {
 			send.disabled = true;
-			await invoke('new_message', { text: input.value });
+			await invoke('new_message', { prompt: input.value });
 			send.disabled = false;
 		})
 	</script>

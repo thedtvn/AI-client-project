@@ -4,21 +4,19 @@
 mod commands;
 mod tokenizer;
 mod serde_obj;
+mod api_req;
 
 use std::{collections::HashMap, sync::Arc};
 
 use serde_json::Value;
+use serde_obj::NewInstancePayload;
 use tauri::{
-    async_runtime::Mutex, AppHandle, CustomMenuItem, Manager as _, SystemTray, SystemTrayEvent, SystemTrayMenu, WindowBuilder
+    async_runtime::Mutex, AppHandle, CustomMenuItem, Manager as _, State, SystemTray, SystemTrayEvent, SystemTrayMenu, WindowBuilder
 };
 use tauri_plugin_positioner::WindowExt as _;
 use tokenizer::MessageType;
 
-#[derive(Clone, serde::Serialize)]
-struct Payload {
-    args: Vec<String>,
-    cwd: String,
-}
+
 
 fn get_dir() -> std::path::PathBuf {
     #[cfg(dev)]
@@ -126,13 +124,22 @@ fn main() {
     let mess_list: Arc<Mutex<Vec<MessageType>>> = Arc::new(Mutex::new(Vec::new()));
     tauri::Builder::default()
         .manage(Arc::new(Mutex::new(config)))
+        .on_window_event(|event| {
+            match event.event() {
+                tauri::WindowEvent::CloseRequested { api, .. } => {
+                    if event.window().label() == "main" {
+                        let messages: State<Arc<Mutex<Vec<MessageType>>>> = event.window().state();
+                        messages.blocking_lock().clear();
+                    }
+                }
+                _ => {}
+            }
+        })
         .manage(mess_list)
         .system_tray(create_sys_tray())
         .on_system_tray_event(|app: &AppHandle, event: SystemTrayEvent| tray_event(app, event))
-        .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
-            println!("{}, {argv:?}, {cwd}", app.package_info().name);
-            app.emit_all("single-instance", Payload { args: argv, cwd })
-                .unwrap();
+        .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
+            app.emit_all("new-instance", NewInstancePayload { args, cwd }).unwrap();
         }))
         .plugin(tauri_plugin_positioner::init())
         .setup(|app| {
@@ -142,12 +149,13 @@ fn main() {
             let _ = tauri_plugin_deep_link::unregister("aihelper");
             tauri_plugin_deep_link::prepare("aihelper");
             tauri_plugin_deep_link::register("aihelper", move |request| {
+                println!("Received deep link: {:?}", request);
                 handle.emit_all("scheme-request-received", request).unwrap();
             })
             .unwrap();
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![crate::commands::md_to_html])
+        .invoke_handler(tauri::generate_handler![crate::commands::md_to_html, crate::commands::new_message])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
         .run(|app_handle, event| match event {

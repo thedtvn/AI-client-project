@@ -20,3 +20,15 @@ impl ConfigFile {
         std::fs::write(path, serde_json::to_string(&self).unwrap()).unwrap();
     }
 }
+
+#[derive(Clone, serde::Serialize)]
+pub struct NewInstancePayload {
+    pub args: Vec<String>,
+    pub cwd: String,
+}
+
+#[derive(Clone, serde::Serialize)]
+pub struct MessageEventPayload {
+    pub data: String,
+    pub uuid: uuid::Uuid,
+}
