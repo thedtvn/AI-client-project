@@ -56,7 +56,7 @@ async fn get_response_text(promt: String, app: tauri::AppHandle) {
     let client = crate_client().await;
     let event_id = get_event_id(client.clone(), promt).await.unwrap();
     let res = get_response(client, event_id).await.unwrap();
-    let stream = EventStream::new(res);
+    let mut stream = EventStream::new(res);
     let messages_uuid = uuid::Uuid::new_v4();
     let mut is_tool_call = false;
     let mut vec = Vec::new();
