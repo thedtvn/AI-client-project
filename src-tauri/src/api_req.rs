@@ -97,6 +97,7 @@ async fn get_response_text(promt: String, app: tauri::AppHandle) {
         return;
     }
     messages.push(MessageType::ToolCall(ToolCall { content: vec.join("") }));
+    drop(messages);
     // TODO: Add tool response
 }
 
