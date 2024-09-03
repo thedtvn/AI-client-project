@@ -30,7 +30,6 @@ pub struct ResponseEventID {
 }
 
 async fn get_event_id(client: reqwest::Client, promt: String) -> reqwest::Result<String> {
-    println!("promt: {}", promt);
     let body = ReqestEventID { data: vec![promt] };
     let req = client
         .post("https://thedtvn-local-ai-helper.hf.space/call/predict")
@@ -54,18 +53,17 @@ async fn get_response(
     Ok(req.bytes_stream())
 }
 
-pub(crate) fn get_response_text(promt: String, app: tauri::AppHandle) -> BoxFuture<'static, ()> {
+pub(crate) fn get_response_text(promt: String, app: tauri::AppHandle, id: String) -> BoxFuture<'static, ()> {
     async move {
-        get_response_text_async(promt, app).await;
+        get_response_text_async(promt, app, id).await;
     }.boxed()
 }
 
-async fn get_response_text_async(promt: String, app: tauri::AppHandle) {
+async fn get_response_text_async(promt: String, app: tauri::AppHandle, messages_uuid: String) {
     let client = crate_client().await;
     let event_id = get_event_id(client.clone(), promt).await.unwrap();
     let res = get_response(client, event_id).await.unwrap();
     let mut stream = EventStream::new(res);
-    let messages_uuid = uuid::Uuid::new_v4();
     let mut is_tool_call = false;
     let mut vec = Vec::new();
     let mut index = 0;
@@ -90,7 +88,7 @@ async fn get_response_text_async(promt: String, app: tauri::AppHandle) {
                     "message",
                     MessageEventPayload {
                         data: vec.clone().join(""),
-                        uuid: messages_uuid,
+                        uuid: messages_uuid.clone(),
                     },
                 )
                 .unwrap();
@@ -110,7 +108,7 @@ async fn get_response_text_async(promt: String, app: tauri::AppHandle) {
     let clone_messages = messages.clone();
     drop(messages);
     let promt = tokenize_messages(clone_messages);
-    get_response_text(promt, app).await
+    get_response_text(promt, app, messages_uuid).await
 }
 
 #[derive(Debug, Serialize, Deserialize)]

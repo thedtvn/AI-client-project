@@ -7,6 +7,7 @@ use serde_json::Value;
 pub struct ConfigFile {
     #[serde(default)]
     pub run_on_startup: bool,
+    pub save_on_close: bool,
     pub plugins: HashMap<String, Value>,
 }
 
@@ -30,5 +31,5 @@ pub struct NewInstancePayload {
 #[derive(Clone, serde::Serialize)]
 pub struct MessageEventPayload {
     pub data: String,
-    pub uuid: uuid::Uuid,
+    pub uuid: String,
 }

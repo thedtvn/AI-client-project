@@ -12,6 +12,12 @@ class Message extends HTMLElement {
         this.innerHTML = await invoke('md_to_html', { text: message });;
         return this;
     }
+
+    async load() {
+        this.setAttribute("class", "markdown-body message");
+        this.innerHTML = "<div class=\"loader\"></div>";
+        return this;
+    }
 }
 
 window.customElements.define("chat-message", Message);

@@ -1,32 +1,39 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 #![allow(unused_variables)]
-mod commands;
-mod tokenizer;
-mod serde_obj;
 mod api_req;
+mod commands;
+mod serde_obj;
+mod tokenizer;
 
 use std::{collections::HashMap, sync::Arc};
 
 use serde_json::Value;
 use serde_obj::NewInstancePayload;
 use tauri::{
-    async_runtime::Mutex, AppHandle, CustomMenuItem, Manager as _, State, SystemTray, SystemTrayEvent, SystemTrayMenu, WindowBuilder
+    async_runtime::Mutex, AppHandle, CustomMenuItem, Manager as _, State, SystemTray,
+    SystemTrayEvent, SystemTrayMenu, WindowBuilder,
 };
 use tauri_plugin_positioner::WindowExt as _;
 use tokenizer::MessageType;
 
-
-
 fn get_dir() -> std::path::PathBuf {
     #[cfg(dev)]
-    {
-       return std::env::current_dir().unwrap().parent().unwrap().join("test_workdir");
+    {   
+        let workking_test_dir = std::env::current_dir().unwrap().parent().unwrap().join("test_workdir");
+        if !workking_test_dir.exists() {
+            std::fs::create_dir(&workking_test_dir).unwrap();
+        }
+        return workking_test_dir;
     }
     #[cfg(not(dev))]
     {
-        return std::env::current_exe().unwrap().parent().unwrap().to_path_buf();
-    } 
+        return std::env::current_exe()
+            .unwrap()
+            .parent()
+            .unwrap()
+            .to_path_buf();
+    }
 }
 
 fn get_config(plugins_config_default: HashMap<String, Value>) -> serde_obj::ConfigFile {
@@ -62,12 +69,15 @@ fn create_main_window(app: AppHandle) {
     };
     let binding = window.current_monitor().unwrap().unwrap();
     let monitor = binding.size();
-    window.set_size(tauri::PhysicalSize::new(400, monitor.height - 60)).unwrap();
+    window
+        .set_size(tauri::PhysicalSize::new(400, monitor.height - 60))
+        .unwrap();
     window.show().unwrap();
-    window.move_window(tauri_plugin_positioner::Position::TopRight).unwrap();
+    window
+        .move_window(tauri_plugin_positioner::Position::TopRight)
+        .unwrap();
     window.set_focus().unwrap();
 }
-
 
 fn create_setting_window(app: AppHandle) {
     let window_r = app.get_window("settings");
@@ -125,15 +135,14 @@ fn main() {
     tauri::Builder::default()
         .manage(Arc::new(Mutex::new(config)))
         .on_window_event(|event| {
+            let config: State<Arc<Mutex<serde_obj::ConfigFile>>> = event.window().state();
             match event.event() {
                 tauri::WindowEvent::Destroyed => {
-                    println!("Close requested: {:?}", event.window().label());
-                    if event.window().label() == "main" {
+                    if event.window().label() == "main" && config.blocking_lock().save_on_close {
                         let messages: State<Arc<Mutex<Vec<MessageType>>>> = event.window().state();
                         messages.blocking_lock().clear();
-                        println!("Clear messages");
                     }
-                },
+                }
                 tauri::WindowEvent::Resized(size) => {
                     if event.window().label() == "main" {
                         let x_size = size.width;
@@ -142,10 +151,19 @@ fn main() {
                         let binding = window.current_monitor().unwrap().unwrap();
                         let monitor = binding.size();
                         if (monitor.height - 60) != y_size {
-                            window.set_size(tauri::PhysicalSize::new(x_size, monitor.height - 60)).unwrap(); 
-                        } 
+                            window
+                                .set_size(tauri::PhysicalSize::new(x_size, monitor.height - 60))
+                                .unwrap();
+                        }
                     }
-                },
+                }
+                tauri::WindowEvent::Moved(position) => {
+                    if event.window().label() == "main" && position.y != 0 {
+                        let _ = event
+                            .window()
+                            .set_position(tauri::PhysicalPosition::new(position.x, 0));
+                    }
+                }
                 _ => {}
             }
         })
@@ -153,7 +171,8 @@ fn main() {
         .system_tray(create_sys_tray())
         .on_system_tray_event(|app: &AppHandle, event: SystemTrayEvent| tray_event(app, event))
         .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
-            app.emit_all("new-instance", NewInstancePayload { args, cwd }).unwrap();
+            app.emit_all("new-instance", NewInstancePayload { args, cwd })
+                .unwrap();
         }))
         .plugin(tauri_plugin_positioner::init())
         .setup(|app| {
@@ -163,13 +182,16 @@ fn main() {
             let _ = tauri_plugin_deep_link::unregister("aihelper");
             tauri_plugin_deep_link::prepare("aihelper");
             tauri_plugin_deep_link::register("aihelper", move |request| {
-                println!("Received deep link: {:?}", request);
                 handle.emit_all("scheme-request-received", request).unwrap();
             })
             .unwrap();
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![crate::commands::md_to_html, crate::commands::new_message])
+        .invoke_handler(tauri::generate_handler![
+            crate::commands::md_to_html,
+            crate::commands::new_message,
+            crate::commands::generate_uuid
+        ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
         .run(|app_handle, event| match event {
