@@ -70,7 +70,7 @@ fn create_main_window(app: AppHandle) {
     let binding = window.current_monitor().unwrap().unwrap();
     let monitor = binding.size();
     window
-        .set_size(tauri::PhysicalSize::new(400, monitor.height - 60))
+        .set_size(tauri::PhysicalSize::new(monitor.width / 4, monitor.height - 60))
         .unwrap();
     window.show().unwrap();
     window

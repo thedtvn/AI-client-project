@@ -62,7 +62,8 @@ fn get_filtered_messages(messages: Vec<MessageType>) -> (Vec<SystemMessage>, Vec
     (system_messages, filtered_messages)
 }
 
-pub fn tokenize_messages(messages: Vec<MessageType>) -> String {
+pub fn tokenize_messages(mut messages: Vec<MessageType>) -> String {
+    inject_system_prompt(&mut messages);
     let mut text = String::new();
     text.push_str("<s>");
     let (system_messages, filtered_messages) = get_filtered_messages(messages.clone());
@@ -93,7 +94,13 @@ pub fn tokenize_messages(messages: Vec<MessageType>) -> String {
             text.push_str("[/TOOL_RESULTS]");
         }
     }
-    text
+    text.replace(" ", "")
 }
 
-
+fn inject_system_prompt(messages: &mut Vec<MessageType>) {
+    let sys_mess = "You're a helpful assistant.
+Always assist with care, respect, and truth. Respond with utmost utility yet securely. 
+Avoid harmful, unethical, prejudiced, or negative content. Ensure replies promote fairness and positivity.
+You can use Markdown syntax to makeup your responses.";
+    messages.insert( 0, MessageType::System(SystemMessage { content: sys_mess.to_string() })); 
+}
