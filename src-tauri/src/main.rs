@@ -12,7 +12,7 @@ use serde_json::Value;
 use serde_obj::NewInstancePayload;
 use tauri::{
     async_runtime::Mutex, AppHandle, CustomMenuItem, Manager as _, State, SystemTray,
-    SystemTrayEvent, SystemTrayMenu, WindowBuilder,
+    SystemTrayEvent, SystemTrayMenu, WindowBuilder, GlobalShortcutManager
 };
 use tauri_plugin_positioner::WindowExt as _;
 use tokenizer::MessageType;
@@ -184,6 +184,14 @@ fn main() {
         }))
         .plugin(tauri_plugin_positioner::init())
         // setup
+        .setup(|app| {
+            let handle = app.handle();
+            let mut s_manager = handle.global_shortcut_manager();
+            s_manager.register("Alt+C", move || {
+                create_main_window(handle.clone());
+            }).unwrap();
+            Ok(())
+        })
         .setup(|app| {
             let handle = app.handle();
             let _ = tauri_plugin_deep_link::unregister("aihelper");
