@@ -19,8 +19,12 @@ use tokenizer::MessageType;
 
 fn get_dir() -> std::path::PathBuf {
     #[cfg(dev)]
-    {   
-        let workking_test_dir = std::env::current_dir().unwrap().parent().unwrap().join("test_workdir");
+    {
+        let workking_test_dir = std::env::current_dir()
+            .unwrap()
+            .parent()
+            .unwrap()
+            .join("test_workdir");
         if !workking_test_dir.exists() {
             std::fs::create_dir(&workking_test_dir).unwrap();
         }
@@ -70,7 +74,10 @@ fn create_main_window(app: AppHandle) {
     let binding = window.current_monitor().unwrap().unwrap();
     let monitor = binding.size();
     window
-        .set_size(tauri::PhysicalSize::new(monitor.width / 4, monitor.height - 60))
+        .set_size(tauri::PhysicalSize::new(
+            monitor.width / 4,
+            monitor.height - 60,
+        ))
         .unwrap();
     window.show().unwrap();
     window
@@ -170,14 +177,14 @@ fn main() {
         .manage(mess_list)
         .system_tray(create_sys_tray())
         .on_system_tray_event(|app: &AppHandle, event: SystemTrayEvent| tray_event(app, event))
+        // plugins
         .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
             app.emit_all("new-instance", NewInstancePayload { args, cwd })
                 .unwrap();
         }))
         .plugin(tauri_plugin_positioner::init())
+        // setup
         .setup(|app| {
-            // If you need macOS support this must be called in .setup() !
-            // Otherwise this could be called right after prepare() but then you don't have access to tauri APIs
             let handle = app.handle();
             let _ = tauri_plugin_deep_link::unregister("aihelper");
             tauri_plugin_deep_link::prepare("aihelper");

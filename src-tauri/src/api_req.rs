@@ -97,7 +97,7 @@ async fn get_response_text_async(promt: String, app: tauri::AppHandle, messages_
         }
     }
     let messages: State<Arc<Mutex<Vec<MessageType>>>> = app.state();
-    let mut messages = messages.lock().await;
+    let mut messages = messages.lock().await; 
     if !is_tool_call {
         messages.push(MessageType::Assistant(AssistantMessage { content: vec.join("") }));
         return;
