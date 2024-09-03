@@ -14,6 +14,9 @@
       "all": false,
       "window": {
         "all": true
+      },
+      "shell": {
+        "open": true
       }
     },
     "windows": [

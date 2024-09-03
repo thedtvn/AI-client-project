@@ -53,7 +53,7 @@ fn create_main_window(app: AppHandle) {
             .skip_taskbar(true)
             .always_on_top(true)
             .decorations(false)
-            .resizable(false)
+            .resizable(true)
             .enable_clipboard_access()
             .build()
             .unwrap()
@@ -126,12 +126,26 @@ fn main() {
         .manage(Arc::new(Mutex::new(config)))
         .on_window_event(|event| {
             match event.event() {
-                tauri::WindowEvent::CloseRequested { api, .. } => {
+                tauri::WindowEvent::Destroyed => {
+                    println!("Close requested: {:?}", event.window().label());
                     if event.window().label() == "main" {
                         let messages: State<Arc<Mutex<Vec<MessageType>>>> = event.window().state();
                         messages.blocking_lock().clear();
+                        println!("Clear messages");
                     }
-                }
+                },
+                tauri::WindowEvent::Resized(size) => {
+                    if event.window().label() == "main" {
+                        let x_size = size.width;
+                        let y_size = size.height;
+                        let window = event.window();
+                        let binding = window.current_monitor().unwrap().unwrap();
+                        let monitor = binding.size();
+                        if (monitor.height - 60) != y_size {
+                            window.set_size(tauri::PhysicalSize::new(x_size, monitor.height - 60)).unwrap(); 
+                        } 
+                    }
+                },
                 _ => {}
             }
         })

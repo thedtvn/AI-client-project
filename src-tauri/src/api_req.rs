@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
 use eventsource_stream::EventStream;
-use futures_util::StreamExt as _;
+use futures_core::future::BoxFuture;
+use futures_util::{FutureExt as _, StreamExt as _};
 use reqwest::header;
 use serde::{Deserialize, Serialize};
 use tauri::{async_runtime::Mutex, Manager as _, State};
@@ -29,6 +30,7 @@ pub struct ResponseEventID {
 }
 
 async fn get_event_id(client: reqwest::Client, promt: String) -> reqwest::Result<String> {
+    println!("promt: {}", promt);
     let body = ReqestEventID { data: vec![promt] };
     let req = client
         .post("https://thedtvn-local-ai-helper.hf.space/call/predict")
@@ -52,7 +54,13 @@ async fn get_response(
     Ok(req.bytes_stream())
 }
 
-async fn get_response_text(promt: String, app: tauri::AppHandle) {
+pub(crate) fn get_response_text(promt: String, app: tauri::AppHandle) -> BoxFuture<'static, ()> {
+    async move {
+        get_response_text_async(promt, app).await;
+    }.boxed()
+}
+
+async fn get_response_text_async(promt: String, app: tauri::AppHandle) {
     let client = crate_client().await;
     let event_id = get_event_id(client.clone(), promt).await.unwrap();
     let res = get_response(client, event_id).await.unwrap();
@@ -68,13 +76,13 @@ async fn get_response_text(promt: String, app: tauri::AppHandle) {
                     break;
                 };
                 let token = get_response_token(event.data);
-                if token.special && index == 0 && token.token == "[TOOL_CALLS]" {
+                if token.special && index == 0 && token.text == "[TOOL_CALLS]" {
                     is_tool_call = true;
-                } else if token.special && token.token == "</s>" {
+                } else if token.special && token.text == "</s>" {
                     break;
                 }
                 index += 1;
-                vec.push(token.token);
+                vec.push(token.text);
                 if is_tool_call {
                     continue;
                 }
@@ -97,13 +105,17 @@ async fn get_response_text(promt: String, app: tauri::AppHandle) {
         return;
     }
     messages.push(MessageType::ToolCall(ToolCall { content: vec.join("") }));
+    let tool_response = get_tool_response(vec.join(""), app.clone());
+    messages.push(MessageType::ToolResponse(ToolResponse { content: tool_response }));
+    let clone_messages = messages.clone();
     drop(messages);
-    // TODO: Add tool response
+    let promt = tokenize_messages(clone_messages);
+    get_response_text(promt, app).await
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TokenResponse {
-    pub token: String,
+    pub text: String,
     pub special: bool,
 }
 
@@ -111,4 +123,8 @@ fn get_response_token(data: String) -> TokenResponse {
     let vec_data: Vec<String> = serde_json::from_str(&data).unwrap();
     let json_str_data = vec_data[0].clone();
     serde_json::from_str(&json_str_data).unwrap()
+}
+
+fn get_tool_response(input: String, app: tauri::AppHandle) -> String {
+    "".to_string()
 }

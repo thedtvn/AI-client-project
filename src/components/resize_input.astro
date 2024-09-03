@@ -18,13 +18,14 @@
         } else {
             this.style.height = this.scrollHeight + "px";
         }
-        chat_box.setAttribute("style", `height: calc(90% - (${input_root.offsetHeight}px + 10px));`);
+        chat_box.setAttribute("style", `height: calc(90% - (${input_root.offsetHeight}px + 20px));`);
     }
     let input = document.getElementById("input");
     input.addEventListener("input", resize_textarea);
 </script>
 <style>
     #input {
+        width: 100%;
         resize: none;
         padding: 5px;
         font-size: larger;

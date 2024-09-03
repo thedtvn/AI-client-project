@@ -26,8 +26,7 @@ pub struct SystemMessage {
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct ToolResponse {
-    pub content: String,
-    pub tool_call_id: Option<String>
+    pub content: String
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]

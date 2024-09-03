@@ -89,6 +89,15 @@
 				background: #adadad5f;
 			}
 		</style>
+		<script>
+			import { open } from '@tauri-apps/api/shell';
+			window.addEventListener("click", (event) => {
+				if (event.target.tagName !== "A") return;
+				event.preventDefault();
+				let url_open = event.target.getAttribute("href");
+				open(url_open);
+			});
+		</script>
 	</head>
 
 	<body data-sveltekit-preload-data="hover">

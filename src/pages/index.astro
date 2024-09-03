@@ -21,7 +21,6 @@ import SendButton from "../components/send_btn.astro";
 			<ResizeInput />
 			<SendButton />
 		</div>
-
 	</div>
 	<script>
 		import "../components/chat_mess";
@@ -36,13 +35,22 @@ import SendButton from "../components/send_btn.astro";
 		}
 		
 		listen('message', (event) => {
-			console.log(event.payload);
+			let mid = event.payload.uuid;
+			let data = event.payload.data;
+			if (!(mid in message_map)) {
+				message_map[mid] = init_new_message();
+			}
+			message_map[mid].init(data, false);
 			chat_container.scrollTop = chat_container.scrollHeight;
 		})
 
 		send.addEventListener("click", async () => {
 			send.disabled = true;
-			await invoke('new_message', { prompt: input.value });
+			let user_message = init_new_message();
+			user_message.init(input.value, true);
+			let content = input.value;
+			input.value = "";
+			await invoke('new_message', { prompt: content });
 			send.disabled = false;
 		})
 	</script>
@@ -72,8 +80,8 @@ import SendButton from "../components/send_btn.astro";
 
 
 		#input_root {
-			width: 100%;
 			display: flex;
+			margin: 10px;
 			justify-content: center;
 			align-items: center;
 		}
@@ -85,7 +93,7 @@ import SendButton from "../components/send_btn.astro";
 			top: 50%;
 		}
 		#chat_box {
-			height: calc(90% - (75px + 10px));
+			height: calc(90% - (75px + 20px));
 			max-height: 90%;
 			display: flex;
 			flex-direction: column;
