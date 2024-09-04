@@ -2,7 +2,7 @@
 name = "ai-helper"
 version = "0.1.0"
 description = "A Tauri App"
-authors = ["you"]
+authors = ["The DT (https://thedt.is-a.dev)"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -11,16 +11,21 @@ edition = "2021"
 tauri-build = { version = "1", features = [] }
 
 [dependencies]
-tauri = { version = "1", features = [ "shell-open", "window-all", "system-tray", "global-shortcut"] }
-tauri-plugin-single-instance = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
-tauri-plugin-positioner = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
+tauri = { version = "1", features = [ "global-shortcut-all",
+    "shell-open",
+    "window-all",
+    "system-tray"
+] }
+tauri-plugin-single-instance = { git = "https://github.com/tauri-apps/plugins-workspace", rev = "76b0f65" }
+tauri-plugin-positioner = { git = "https://github.com/tauri-apps/plugins-workspace", rev = "76b0f65" }
+tauri-plugin-autostart = { git = "https://github.com/tauri-apps/plugins-workspace", rev = "76b0f65" }
+markdown = { git = "https://github.com/wooorm/markdown-rs" }
 tauri-plugin-deep-link = "0.1.2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sapi-lite = "0.1.1"
 env_logger = "0.11.5"
 log = "0.4.22"
-markdown = "0.3.0"
 reqwest = { version = "0.12.7", features = ["json", "stream"] }
 eventsource-stream = "0.2.3"
 futures-core = "0.3.30"

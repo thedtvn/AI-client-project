@@ -2,6 +2,7 @@ use std::{collections::HashMap, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use tauri_plugin_autostart::ManagerExt;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ConfigFile {
@@ -17,7 +18,14 @@ impl ConfigFile {
         self.plugins.insert(id, value);
     }
 
-    pub fn save_to_file(self, path: &PathBuf) {
+    pub fn save_to_file(self, path: &PathBuf, app: Option<tauri::AppHandle>) {
+        if let Some(app) = app {
+            if self.run_on_startup {
+                let _ = app.autolaunch().enable();
+            } else {
+                let _ = app.autolaunch().disable();
+            }
+        }
         std::fs::write(path, serde_json::to_string(&self).unwrap()).unwrap();
     }
 }

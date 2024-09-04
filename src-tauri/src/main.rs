@@ -12,8 +12,9 @@ use serde_json::Value;
 use serde_obj::NewInstancePayload;
 use tauri::{
     async_runtime::Mutex, AppHandle, CustomMenuItem, Manager as _, State, SystemTray,
-    SystemTrayEvent, SystemTrayMenu, WindowBuilder, GlobalShortcutManager
+    SystemTrayEvent, SystemTrayMenu, WindowBuilder
 };
+use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_positioner::WindowExt as _;
 use tokenizer::MessageType;
 
@@ -40,7 +41,7 @@ fn get_dir() -> std::path::PathBuf {
     }
 }
 
-fn get_config(plugins_config_default: HashMap<String, Value>) -> serde_obj::ConfigFile {
+fn get_config(plugins_config_default: HashMap<String, Value>, app_handle: Option<AppHandle>) -> serde_obj::ConfigFile {
     let file_path = get_dir().join("config.json");
     let mut config: serde_obj::ConfigFile = if !file_path.exists() {
         serde_json::from_slice(include_bytes!("cdn/config.json")).unwrap()
@@ -52,7 +53,7 @@ fn get_config(plugins_config_default: HashMap<String, Value>) -> serde_obj::Conf
             config.set_plugin_config(k, v);
         }
     }
-    config.clone().save_to_file(&file_path);
+    config.clone().save_to_file(&file_path, app_handle);
     config
 }
 
@@ -137,9 +138,10 @@ fn main() {
         .filter(None, log::LevelFilter::Info)
         .init();
     let plugins_config_default = HashMap::new();
-    let config = get_config(plugins_config_default);
+    let config = get_config(plugins_config_default, None);
     let mess_list: Arc<Mutex<Vec<MessageType>>> = Arc::new(Mutex::new(Vec::new()));
     tauri::Builder::default()
+        .manage(mess_list)
         .manage(Arc::new(Mutex::new(config)))
         .on_window_event(|event| {
             let config: State<Arc<Mutex<serde_obj::ConfigFile>>> = event.window().state();
@@ -174,7 +176,6 @@ fn main() {
                 _ => {}
             }
         })
-        .manage(mess_list)
         .system_tray(create_sys_tray())
         .on_system_tray_event(|app: &AppHandle, event: SystemTrayEvent| tray_event(app, event))
         // plugins
@@ -183,13 +184,16 @@ fn main() {
                 .unwrap();
         }))
         .plugin(tauri_plugin_positioner::init())
+        .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, Some(vec![])))
         // setup
         .setup(|app| {
-            let handle = app.handle();
-            let mut s_manager = handle.global_shortcut_manager();
-            s_manager.register("Alt+C", move || {
-                create_main_window(handle.clone());
-            }).unwrap();
+            let hendler = app.handle();
+            let config = hendler.state::<Arc<Mutex<serde_obj::ConfigFile>>>();
+            if config.blocking_lock().run_on_startup {
+                let _ = hendler.autolaunch().enable();
+            } else {
+                let _ = hendler.autolaunch().disable();
+            }
             Ok(())
         })
         .setup(|app| {

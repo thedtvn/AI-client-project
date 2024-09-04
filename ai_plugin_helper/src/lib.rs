@@ -27,10 +27,6 @@ impl PluginHelper {
     pub fn get_id(&self) -> String {
         self.id.clone()
     }
-
-    pub fn _set_callback(&self, callback: fn (id: &str, name: &str, kargs: HashMap<&str, Value>) -> Value) {
-
-    }
 }
 
 #[cfg(test)]
@@ -39,7 +35,7 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let a = PluginHelper::new("Google", "googe_12321", Some("this is a description".to_string()));
+        let a = PluginHelper::new("Google", "googe_12321");
         println!("{:?}", a);
         assert!(a.is_ok());
     }
