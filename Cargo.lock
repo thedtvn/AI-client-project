@@ -3965,7 +3965,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-autostart"
 version = "0.0.0"
-source = "git+https://github.com/tauri-apps/plugins-workspace?rev=76b0f65#76b0f657d1ce0eb273f5b31b6ddf056c7a185d0b"
+source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v1#5c249a1a1076ac78cfc0ed4c2857cf7e2540b1cc"
 dependencies = [
  "auto-launch",
  "log",
@@ -3994,7 +3994,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-positioner"
 version = "1.0.5"
-source = "git+https://github.com/tauri-apps/plugins-workspace?rev=76b0f65#76b0f657d1ce0eb273f5b31b6ddf056c7a185d0b"
+source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v1#5c249a1a1076ac78cfc0ed4c2857cf7e2540b1cc"
 dependencies = [
  "log",
  "serde",
@@ -4007,14 +4007,14 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-single-instance"
 version = "0.0.0"
-source = "git+https://github.com/tauri-apps/plugins-workspace?rev=76b0f65#76b0f657d1ce0eb273f5b31b6ddf056c7a185d0b"
+source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v1#5c249a1a1076ac78cfc0ed4c2857cf7e2540b1cc"
 dependencies = [
  "log",
  "serde",
  "serde_json",
  "tauri",
  "thiserror",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
  "zbus",
 ]
 

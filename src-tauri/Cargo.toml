@@ -16,9 +16,9 @@ tauri = { version = "1", features = [ "global-shortcut-all",
     "window-all",
     "system-tray"
 ] }
-tauri-plugin-single-instance = { git = "https://github.com/tauri-apps/plugins-workspace", rev = "76b0f65" }
-tauri-plugin-positioner = { git = "https://github.com/tauri-apps/plugins-workspace", rev = "76b0f65" }
-tauri-plugin-autostart = { git = "https://github.com/tauri-apps/plugins-workspace", rev = "76b0f65" }
+tauri-plugin-single-instance = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1"}
+tauri-plugin-positioner = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
+tauri-plugin-autostart = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
 markdown = { git = "https://github.com/wooorm/markdown-rs" }
 tauri-plugin-deep-link = "0.1.2"
 serde = { version = "1", features = ["derive"] }
