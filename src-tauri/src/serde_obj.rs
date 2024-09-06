@@ -8,15 +8,10 @@ use tauri_plugin_autostart::ManagerExt;
 pub struct ConfigFile {
     #[serde(default)]
     pub run_on_startup: bool,
-    pub save_on_close: bool,
-    pub plugins: HashMap<String, Value>,
+    pub save_on_close: bool
 }
 
 impl ConfigFile {
-
-    pub fn set_plugin_config(&mut self, id: String, value: Value) {
-        self.plugins.insert(id, value);
-    }
 
     pub fn save_to_file(self, path: &PathBuf, app: Option<tauri::AppHandle>) {
         if let Some(app) = app {

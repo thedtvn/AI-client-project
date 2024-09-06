@@ -1,6 +1,6 @@
 [workspace]
 members = [
-  "ai_plugin_helper", 
+  "rasast_plugin", 
   "src-tauri"
 ]
 resolver = "2"

@@ -33,15 +33,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ai_plugin_helper"
-version = "0.1.0"
-dependencies = [
- "regex",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "alloc-no-stdlib"
 version = "2.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3051,7 +3042,6 @@ dependencies = [
 name = "rasast"
 version = "0.1.0"
 dependencies = [
- "ai_plugin_helper",
  "bytes",
  "dlopen2",
  "env_logger",
@@ -3060,6 +3050,7 @@ dependencies = [
  "futures-util",
  "log",
  "markdown",
+ "rasast_plugin",
  "reqwest",
  "sapi-lite",
  "serde",
@@ -3071,6 +3062,15 @@ dependencies = [
  "tauri-plugin-positioner",
  "tauri-plugin-single-instance",
  "uuid",
+]
+
+[[package]]
+name = "rasast_plugin"
+version = "0.1.0"
+dependencies = [
+ "regex",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

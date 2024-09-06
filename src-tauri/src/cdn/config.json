@@ -1,5 +1,4 @@
 {
     "run_on_startup": false,
-    "save_on_close": false,
-    "plugins": {}
+    "save_on_close": false
 }
