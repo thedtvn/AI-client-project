@@ -33,6 +33,15 @@ import SendButton from "../components/send_btn.astro";
 			main_chat.appendChild(bot);
 			return bot;
 		}
+		
+		let old_messages = await invoke("get_messages", {});
+		for (let i of old_messages) {
+			let mess = init_new_message();
+			mess.init(i.content, i.is_user);
+			let id = await invoke("generate_uuid", {});
+			message_map[id] = mess;
+		}
+		chat_container.scrollTop = chat_container.scrollHeight;
 
 		listen("message", (event) => {
 			let mid = event.payload.uuid;

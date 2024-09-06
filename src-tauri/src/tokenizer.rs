@@ -94,13 +94,12 @@ pub fn tokenize_messages(mut messages: Vec<MessageType>) -> String {
             text.push_str("[/TOOL_RESULTS]");
         }
     }
-    text.replace(" ", "")
+    text.replace(" ", "▁")
 }
 
 fn inject_system_prompt(messages: &mut Vec<MessageType>) {
-    let sys_mess = "You're a helpful assistant.
-Always assist with care, respect, and truth. Respond with utmost utility yet securely. 
+    let sys_mess = "Always assist with care, respect, and truth. Respond with utmost utility yet securely. Markdown is allowed.
 Avoid harmful, unethical, prejudiced, or negative content. Ensure replies promote fairness and positivity.
-You can use Markdown syntax to makeup your responses.";
+You're a helpful assistant Name \"Rasast\".";
     messages.insert( 0, MessageType::System(SystemMessage { content: sys_mess.to_string() })); 
 }

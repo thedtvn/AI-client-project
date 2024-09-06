@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use serde::{Deserialize, Serialize};
 use tauri::{async_runtime::Mutex, Manager, State};
 use crate::tokenizer::*;
 use crate::api_req::get_response_text;
@@ -23,3 +24,28 @@ pub async fn new_message(app: tauri::AppHandle, prompt: String, id: String) -> R
     get_response_text(text, app, id).await;
     Ok(())
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Message {
+    is_user: bool,
+    content: String
+}
+
+#[tauri::command(async)]
+pub async fn get_messages(messages: State<'_, Arc<Mutex<Vec<MessageType>>>>) -> Result<Vec<Message>, String> {
+    let message = messages.lock().await.clone();
+    let mut j_message = Vec::new();
+    for message in message.iter() {
+        match message {     
+            MessageType::User(user_message) => { 
+                j_message.push(Message { is_user: true, content: user_message.content.clone() }); 
+            },
+            MessageType::Assistant(assistant_message) => { 
+                j_message.push(Message { is_user: false, content: assistant_message.content.clone() }); 
+            },
+            _ => {}
+        }
+    }
+    Ok(j_message)
+}
+

@@ -5,6 +5,7 @@ mod api_req;
 mod commands;
 mod serde_obj;
 mod tokenizer;
+mod plugin_sys;
 
 use std::{collections::HashMap, sync::Arc};
 
@@ -149,7 +150,9 @@ fn main() {
                 tauri::WindowEvent::Destroyed => {
                     if event.window().label() == "main" && config.blocking_lock().save_on_close {
                         let messages: State<Arc<Mutex<Vec<MessageType>>>> = event.window().state();
-                        messages.blocking_lock().clear();
+                        if !config.blocking_lock().save_on_close {
+                            messages.blocking_lock().clear();
+                        }
                     }
                 }
                 tauri::WindowEvent::Resized(size) => {
@@ -209,7 +212,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             crate::commands::md_to_html,
             crate::commands::new_message,
-            crate::commands::generate_uuid
+            crate::commands::generate_uuid,
+            crate::commands::get_messages,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
