@@ -33,31 +33,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ai-helper"
-version = "0.1.0"
-dependencies = [
- "bytes",
- "dlopen2",
- "env_logger",
- "eventsource-stream",
- "futures-core",
- "futures-util",
- "log",
- "markdown",
- "reqwest",
- "sapi-lite",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-autostart",
- "tauri-plugin-deep-link",
- "tauri-plugin-positioner",
- "tauri-plugin-single-instance",
- "uuid",
-]
-
-[[package]]
 name = "ai_plugin_helper"
 version = "0.1.0"
 dependencies = [
@@ -3070,6 +3045,32 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "16abd0c1b639e9eb4d7c50c0b8100b0d0f849be2349829c740fe8e6eb4816429"
 dependencies = [
  "rand_core 0.5.1",
+]
+
+[[package]]
+name = "rasast"
+version = "0.1.0"
+dependencies = [
+ "ai_plugin_helper",
+ "bytes",
+ "dlopen2",
+ "env_logger",
+ "eventsource-stream",
+ "futures-core",
+ "futures-util",
+ "log",
+ "markdown",
+ "reqwest",
+ "sapi-lite",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-autostart",
+ "tauri-plugin-deep-link",
+ "tauri-plugin-positioner",
+ "tauri-plugin-single-instance",
+ "uuid",
 ]
 
 [[package]]
