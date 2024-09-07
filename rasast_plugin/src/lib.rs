@@ -12,14 +12,14 @@ pub struct Function {
 
 impl Function {
     pub fn new(
-        name: String,
-        description: String,
+        name: &str,
+        description: &str,
         parameters: Vec<ArgsInfo>,
         callback: fn(HashMap<String, Value>) -> Value,
     ) -> Self {
         Self {
-            name,
-            description,
+            name: name.to_string(),
+            description: description.to_string(),
             parameters,
             callback,
         }
@@ -62,21 +62,21 @@ pub struct ArgsInfo {
 
 impl ArgsInfo {
     fn new(
-        type_input: String,
-        name: String,
-        description: String,
+        type_input: &str,
+        name: &str,
+        description: &str,
         required: bool,
     ) -> Self {
         let types = vec![
             "array", "boolean", "integer", "number", "object", "string",
         ];
-        if !types.contains(&type_input.as_str()) {
+        if !types.contains(&type_input) {
             panic!("Invalid type input must be one of those: array, boolean, integer, number, object, string");
         }
         Self {
-            type_input,
-            description,
-            name,
+            type_input: type_input.to_string(),
+            description: description.to_string(),
+            name: name.to_string(),
             required,
         }
     }
@@ -97,13 +97,13 @@ pub struct PluginManager {
 }
 
 impl PluginManager {
-    pub fn new(id: String) -> Self {
+    pub fn new(id: &str) -> Self {
         let check_rg = regex::Regex::new(r"^[a-zA-Z0-9_]+$").unwrap();
         if !check_rg.is_match(&id) {
             panic!("Invalid plugin id: {} (only a-z, A-Z, 0-9 and _ allowed)", id);
         }
         Self {
-            id,
+            id.to_string(),
             commands: vec![],
         }
     }
@@ -144,31 +144,31 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let mut manager = PluginManager::new("test".to_string());
+        let mut manager = PluginManager::new("test");
         let mut parameters = Vec::new();
         parameters.push(ArgsInfo::new(
-            "string".to_string(),
-            "test".to_string(),
-            "test".to_string(),
+            "string",
+            "test",
+            "test",
             false,
         ));
         let command = Function::new(
-            "test".to_string(),
-            "test".to_string(),
+            "test",
+            "test",
             parameters,
             callback_test,
         );
         manager.add_command(command);
         let mut parameters2 = Vec::new();
         parameters2.push(ArgsInfo::new(
-            "string".to_string(),
-            "test2".to_string(),
-            "test".to_string(),
+            "string",
+            "test2",
+            "test",
             false,
         ));
         let commamd2 = Function::new(
-            "test2".to_string(),
-            "test2".to_string(),
+            "test2",
+            "test2",
             parameters2,
             callback_test2,
         );

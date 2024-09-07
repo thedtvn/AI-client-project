@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-
+use tauri::{Manager, State};
 
 #[allow(dead_code)]
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -9,34 +9,34 @@ pub enum MessageType {
     Assistant(AssistantMessage),
     System(SystemMessage),
     ToolResponse(ToolResponse),
-    ToolCall(ToolCall)
+    ToolCall(ToolCall),
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct UserMessage {
-    pub content: String
+    pub content: String,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct AssistantMessage {
-    pub content: String
+    pub content: String,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct SystemMessage {
-    pub content: String
+    pub content: String,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub struct ToolResponse {
     pub content: Value,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub call_id: Option<String>
+    pub call_id: Option<String>,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct ToolCall {
-    pub content: String
+    pub content: String,
 }
 
 fn find_first_last_user(messages: Vec<MessageType>) -> (i32, i32) {
@@ -69,6 +69,7 @@ fn get_filtered_messages(messages: Vec<MessageType>) -> (Vec<SystemMessage>, Vec
 
 pub fn tokenize_messages(mut messages: Vec<MessageType>, app: tauri::AppHandle) -> String {
     inject_system_prompt(&mut messages);
+    let tool_available: State<Vec<Value>> = app.state();
     let mut text = String::new();
     text.push_str("<s>");
     let (system_messages, filtered_messages) = get_filtered_messages(messages.clone());
@@ -76,13 +77,22 @@ pub fn tokenize_messages(mut messages: Vec<MessageType>, app: tauri::AppHandle) 
     for (idx, message) in filtered_messages.iter().enumerate() {
         let idx = idx as i32;
         if let MessageType::User(user_message) = message {
+            if idx <= last_user_idx && !tool_available.is_empty() {
+                text.push_str("[AVAILABLE_TOOLS]");
+                let list_tool = tool_available.inner();
+                let tool_available_str = serde_json::to_string(&list_tool).unwrap();
+                text.push_str(&tool_available_str);
+                text.push_str("[/AVAILABLE_TOOLS]");
+            }
             text.push_str("[INST]");
-            if idx <= last_user_idx {
-                if !system_messages.is_empty() {
-                    let system_messages_str = system_messages.iter().map(|s| s.content.clone()).collect::<Vec<String>>().join("<0x0A><0x0A>");
-                    text.push_str(&system_messages_str);
-                    text.push_str("<0x0A><0x0A>");
-                }
+            if idx <= last_user_idx && !system_messages.is_empty() {
+                let system_messages_str = system_messages
+                    .iter()
+                    .map(|s| s.content.clone())
+                    .collect::<Vec<String>>()
+                    .join("<0x0A><0x0A>");
+                text.push_str(&system_messages_str);
+                text.push_str("<0x0A><0x0A>");
             }
             text.push_str(&user_message.content);
             text.push_str("[/INST]");
@@ -106,5 +116,10 @@ fn inject_system_prompt(messages: &mut Vec<MessageType>) {
     let sys_mess = "Always assist with care, respect, and truth. Respond with utmost utility yet securely. Markdown is allowed.
 Avoid harmful, unethical, prejudiced, or negative content. Ensure replies promote fairness and positivity.
 You're a helpful assistant Name \"Rasast\".";
-    messages.insert( 0, MessageType::System(SystemMessage { content: sys_mess.to_string() })); 
+    messages.insert(
+        0,
+        MessageType::System(SystemMessage {
+            content: sys_mess.to_string(),
+        }),
+    );
 }
