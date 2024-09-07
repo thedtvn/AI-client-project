@@ -61,7 +61,7 @@ pub struct ArgsInfo {
 }
 
 impl ArgsInfo {
-    fn new(
+    pub fn new(
         type_input: &str,
         name: &str,
         description: &str,
@@ -81,7 +81,7 @@ impl ArgsInfo {
         }
     }
 
-    fn to_value(&self) -> (String, bool, Value) {
+    pub fn to_value(&self) -> (String, bool, Value) {
         let obj = serde_json::json!({
             "type": self.type_input,
             "description": self.description
@@ -103,7 +103,7 @@ impl PluginManager {
             panic!("Invalid plugin id: {} (only a-z, A-Z, 0-9 and _ allowed)", id);
         }
         Self {
-            id.to_string(),
+            id: id.to_string(),
             commands: vec![],
         }
     }
