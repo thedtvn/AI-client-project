@@ -36,3 +36,4 @@ pnpm-debug.log*
 
 # test dir
 test_workdir
+/package-lock.json
