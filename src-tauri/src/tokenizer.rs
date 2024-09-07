@@ -1,3 +1,6 @@
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+
 
 #[allow(dead_code)]
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -24,9 +27,11 @@ pub struct SystemMessage {
     pub content: String
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub struct ToolResponse {
-    pub content: String
+    pub content: Value,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub call_id: Option<String>
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -62,7 +67,7 @@ fn get_filtered_messages(messages: Vec<MessageType>) -> (Vec<SystemMessage>, Vec
     (system_messages, filtered_messages)
 }
 
-pub fn tokenize_messages(mut messages: Vec<MessageType>) -> String {
+pub fn tokenize_messages(mut messages: Vec<MessageType>, app: tauri::AppHandle) -> String {
     inject_system_prompt(&mut messages);
     let mut text = String::new();
     text.push_str("<s>");
@@ -90,7 +95,7 @@ pub fn tokenize_messages(mut messages: Vec<MessageType>) -> String {
             text.push_str("</s><s>");
         } else if let MessageType::ToolResponse(tool_response) = message {
             text.push_str("[TOOL_RESULTS]");
-            text.push_str(&tool_response.content);
+            text.push_str(serde_json::to_string(&tool_response).unwrap().as_str());
             text.push_str("[/TOOL_RESULTS]");
         }
     }

@@ -1,13 +1,14 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use eventsource_stream::EventStream;
 use futures_core::future::BoxFuture;
 use futures_util::{FutureExt as _, StreamExt as _};
 use reqwest::header;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use tauri::{async_runtime::Mutex, Manager as _, State};
 
-use crate::{serde_obj::MessageEventPayload, tokenizer::*};
+use crate::{serde_obj::MessageEventPayload, tokenizer::*, utility::{get_response_token, prase_tool_call}};
 
 async fn crate_client() -> reqwest::Client {
     let mut headers = header::HeaderMap::new();
@@ -53,7 +54,8 @@ async fn get_response(
     Ok(req.bytes_stream())
 }
 
-pub(crate) fn get_response_text(promt: String, app: tauri::AppHandle, id: String) -> BoxFuture<'static, ()> {
+// this is to make it can recursion async
+pub fn get_response_text(promt: String, app: tauri::AppHandle, id: String) -> BoxFuture<'static, ()> {
     async move {
         get_response_text_async(promt, app, id).await;
     }.boxed()
@@ -102,27 +104,16 @@ async fn get_response_text_async(promt: String, app: tauri::AppHandle, messages_
         messages.push(MessageType::Assistant(AssistantMessage { content: vec.join("") }));
         return;
     }
-    messages.push(MessageType::ToolCall(ToolCall { content: vec.join("") }));
-    let tool_response = get_tool_response(vec.join(""), app.clone());
-    messages.push(MessageType::ToolResponse(ToolResponse { content: tool_response }));
-    let clone_messages = messages.clone();
+    let tool_calls = prase_tool_call(vec.join(""));
+    let tool_call_str = serde_json::to_string(&tool_calls).unwrap();
+    messages.push(MessageType::ToolCall(ToolCall { content: tool_call_str }));
+    let p_callbacks: State<HashMap<String, fn(HashMap<String, Value>) -> Value>> = app.state();
+    for tool_call in tool_calls {
+        let call = p_callbacks.get(&tool_call.name).unwrap();
+        let tool_response = call(tool_call.arguments);
+        messages.push(MessageType::ToolResponse(ToolResponse { content: tool_response, call_id: tool_call.call_id }));
+    }
+    let promt = tokenize_messages(messages.clone(), app.clone());
     drop(messages);
-    let promt = tokenize_messages(clone_messages);
-    get_response_text(promt, app, messages_uuid).await
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct TokenResponse {
-    pub text: String,
-    pub special: bool,
-}
-
-fn get_response_token(data: String) -> TokenResponse {
-    let vec_data: Vec<String> = serde_json::from_str(&data).unwrap();
-    let json_str_data = vec_data[0].clone();
-    serde_json::from_str(&json_str_data).unwrap()
-}
-
-fn get_tool_response(input: String, app: tauri::AppHandle) -> String {
-    "".to_string()
+    get_response_text(promt, app.clone(), messages_uuid).await
 }

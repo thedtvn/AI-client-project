@@ -20,7 +20,7 @@ pub async fn new_message(app: tauri::AppHandle, prompt: String, id: String) -> R
     let messages_mutex: State<Arc<Mutex<Vec<MessageType>>>> = app_binding.state();
     messages_mutex.lock().await.push(MessageType::User(UserMessage { content: prompt }));
     let messeges = messages_mutex.lock().await.clone();
-    let text = tokenize_messages(messeges);
+    let text = tokenize_messages(messeges, app.clone());
     get_response_text(text, app, id).await;
     Ok(())
 }

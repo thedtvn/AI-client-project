@@ -12,7 +12,6 @@ pub struct ConfigFile {
 }
 
 impl ConfigFile {
-
     pub fn save_to_file(self, path: &PathBuf, app: Option<tauri::AppHandle>) {
         if let Some(app) = app {
             if self.run_on_startup {
@@ -35,4 +34,17 @@ pub struct NewInstancePayload {
 pub struct MessageEventPayload {
     pub data: String,
     pub uuid: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ToolCallFn {
+    pub name: String,
+    pub arguments: HashMap<String, Value>,
+    pub call_id: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TokenResponse {
+    pub text: String,
+    pub special: bool,
 }

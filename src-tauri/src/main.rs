@@ -6,10 +6,11 @@ mod commands;
 mod serde_obj;
 mod tokenizer;
 mod plugin_sys;
+mod utility;
 
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 
-use serde_json::Value;
+use plugin_sys::load_plugin;
 use serde_obj::NewInstancePayload;
 use tauri::{
     async_runtime::Mutex, AppHandle, CustomMenuItem, Manager as _, State, SystemTray,
@@ -42,18 +43,13 @@ fn get_dir() -> std::path::PathBuf {
     }
 }
 
-fn get_config(plugins_config_default: HashMap<String, Value>, app_handle: Option<AppHandle>) -> serde_obj::ConfigFile {
+fn get_config(app_handle: Option<AppHandle>) -> serde_obj::ConfigFile {
     let file_path = get_dir().join("config.json");
-    let mut config: serde_obj::ConfigFile = if !file_path.exists() {
+    let config: serde_obj::ConfigFile = if !file_path.exists() {
         serde_json::from_slice(include_bytes!("cdn/config.json")).unwrap()
     } else {
         serde_json::from_str(&std::fs::read_to_string(file_path.clone()).unwrap()).unwrap()
     };
-    for (k, v) in plugins_config_default {
-        if !config.plugins.contains_key(&k) {
-            config.set_plugin_config(k, v);
-        }
-    }
     config.clone().save_to_file(&file_path, app_handle);
     config
 }
@@ -138,10 +134,12 @@ fn main() {
     env_logger::Builder::new()
         .filter(None, log::LevelFilter::Info)
         .init();
-    let plugins_config_default = HashMap::new();
-    let config = get_config(plugins_config_default, None);
+    let (p_info, p_callback) = load_plugin();
+    let config = get_config(None);
     let mess_list: Arc<Mutex<Vec<MessageType>>> = Arc::new(Mutex::new(Vec::new()));
     tauri::Builder::default()
+        .manage(p_info)
+        .manage(p_callback)
         .manage(mess_list)
         .manage(Arc::new(Mutex::new(config)))
         .on_window_event(|event| {

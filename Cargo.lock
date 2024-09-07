@@ -3050,6 +3050,7 @@ dependencies = [
  "futures-util",
  "log",
  "markdown",
+ "rand 0.8.5",
  "rasast_plugin",
  "reqwest",
  "sapi-lite",

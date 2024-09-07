@@ -7,7 +7,7 @@ pub struct Function {
     name: String,
     description: String,
     parameters: Vec<ArgsInfo>,
-    callback: fn(HashMap<String, Value>) -> String,
+    callback: fn(HashMap<String, Value>) -> Value,
 }
 
 impl Function {
@@ -15,7 +15,7 @@ impl Function {
         name: String,
         description: String,
         parameters: Vec<ArgsInfo>,
-        callback: fn(HashMap<String, Value>) -> String,
+        callback: fn(HashMap<String, Value>) -> Value,
     ) -> Self {
         Self {
             name,
@@ -116,7 +116,7 @@ impl PluginManager {
         &self,
     ) -> (
         Vec<Value>,
-        HashMap<String, fn(HashMap<String, Value>) -> String>,
+        HashMap<String, fn(HashMap<String, Value>) -> Value>,
     ) {
         let mut commands = Vec::new();
         let mut callbacks = HashMap::new();
@@ -132,26 +132,26 @@ impl PluginManager {
 mod tests {
     use super::*;
 
-    fn callback_test(input: HashMap<String, Value>) -> String {
+    fn callback_test(input: HashMap<String, Value>) -> Value {
         let _ = input;
-        "test".to_string()
+        Value::String("test".to_string())
     }
 
-    fn callback_test2(input: HashMap<String, Value>) -> String {
+    fn callback_test2(input: HashMap<String, Value>) -> Value {
         let _ = input;
-        "test2".to_string()
+        Value::String("test2".to_string())
     }
 
     #[test]
     fn it_works() {
-        let mut manager = PluginManager::new("test".to_string()).unwrap();
+        let mut manager = PluginManager::new("test".to_string());
         let mut parameters = Vec::new();
         parameters.push(ArgsInfo::new(
             "string".to_string(),
             "test".to_string(),
             "test".to_string(),
             false,
-        ).unwrap());
+        ));
         let command = Function::new(
             "test".to_string(),
             "test".to_string(),
@@ -165,7 +165,7 @@ mod tests {
             "test2".to_string(),
             "test".to_string(),
             false,
-        ).unwrap());
+        ));
         let commamd2 = Function::new(
             "test2".to_string(),
             "test2".to_string(),
