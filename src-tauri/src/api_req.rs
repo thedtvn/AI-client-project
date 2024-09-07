@@ -76,8 +76,10 @@ async fn get_response_text_async(promt: String, app: tauri::AppHandle, messages_
                     break;
                 };
                 let token = get_response_token(event.data);
+                println!("token: {:?}", token);
                 if token.special && index == 0 && token.text == "[TOOL_CALLS]" {
                     is_tool_call = true;
+                    continue;
                 } else if token.special && token.text == "</s>" {
                     break;
                 }

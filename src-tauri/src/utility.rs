@@ -24,7 +24,9 @@ pub fn get_response_token(data: String) -> TokenResponse {
 
 
 pub fn prase_tool_call(input: String) -> Vec<ToolCallFn> {
-    let tool_call: Vec<ToolCallFn> = serde_json::from_str(&input).unwrap();
+    let input = input.split("\n\n").collect::<Vec<&str>>();
+    println!("input: {:?}", input);
+    let tool_call: Vec<ToolCallFn> = serde_json::from_str(&input[0]).unwrap();
     let mut new_tool_call_with_id = Vec::new();
     for mut tool in tool_call {
         let call_id = generate_random_string(9);
