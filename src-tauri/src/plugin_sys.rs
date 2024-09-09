@@ -62,7 +62,7 @@ impl PluginCore {
         self.plugin_info.clone()
     }
 
-    pub fn call_fn(&self, name: &str, args: HashMap<String, Value>) -> ResultValue {
+    pub fn call_fn(&self, name: &str, args: HashMap<String, Value>) -> Value {
         let id = self.map_func.get(name).unwrap();
         let plugin = self.plugin_lib.get(id).unwrap();
         let func_r = unsafe { plugin.symbol::<fn(HashMap<String, Value>) -> Value>(name) };

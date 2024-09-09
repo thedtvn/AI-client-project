@@ -112,7 +112,7 @@ async fn get_response_text_async(promt: String, app: tauri::AppHandle, messages_
     for tool_call in tool_calls {
         let tool_response = p_callbacks.call_fn(&tool_call.name, tool_call.arguments.clone());
         println!("tool_response: {:?}", tool_response.to_value());
-        messages.push(MessageType::ToolResponse(ToolResponse { content: tool_response.to_value(), call_id: tool_call.call_id }));
+        messages.push(MessageType::ToolResponse(ToolResponse { content: tool_response, call_id: tool_call.call_id }));
     }
     let promt = tokenize_messages(messages.clone(), app.clone());
     drop(messages);
