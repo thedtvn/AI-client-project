@@ -113,7 +113,11 @@ async fn get_response_text_async(promt: String, app: tauri::AppHandle, messages_
         messages.push(MessageType::Assistant(AssistantMessage { content: vec.join("") }));
         return;
     }
-    let tool_calls = prase_tool_call(vec.join(""));
+    let tool_calls_r = prase_tool_call(vec.join(""));
+    if tool_calls_r.is_err() {
+        return;
+    }
+    let tool_calls = tool_calls.unwrap();
     let tool_call_str = serde_json::to_string(&tool_calls).unwrap();
     messages.push(MessageType::ToolCall(ToolCall { content: tool_call_str }));
     let p_callbacks: State<PluginCore> = app.state();
