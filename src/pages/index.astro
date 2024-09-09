@@ -54,6 +54,7 @@ import SendButton from "../components/send_btn.astro";
 		});
 
 		send.addEventListener("click", async () => {
+			if (!input.value) return;
 			send.disabled = true;
 			let user_message = init_new_message();
 			user_message.init(input.value, true);
