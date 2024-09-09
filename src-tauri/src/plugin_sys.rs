@@ -1,7 +1,7 @@
 use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
 use dlopen2::symbor::Library;
-use rasast_plugin::PluginManager;
+use rasast_plugin::{PluginManager, SafeValue};
 use serde_json::Value;
 
 use crate::get_dir;
@@ -62,15 +62,16 @@ impl PluginCore {
         self.plugin_info.clone()
     }
 
-    pub fn call_fn(&self, name: &str, args: HashMap<String, Value>) -> Value {
+    pub fn call_fn(&self, name: &str, args: HashMap<String, Value>) -> SafeValue {
         let id = self.map_func.get(name).unwrap();
         let plugin = self.plugin_lib.get(id).unwrap();
-        let func_r = unsafe { plugin.symbol::<fn(HashMap<String, Value>) -> Value>(name) };
+        let func_r = unsafe { plugin.symbol::<fn(HashMap<String, SafeValue>) -> SafeValue>(name) };
         if func_r.is_err() {
             panic!("func not found");
         }
         let func = func_r.unwrap();
-        let r = func(args);
+        let arg_safe_value = args.iter().map(|(k, v)| (k.clone(), v.into())).collect();
+        let r = func(arg_safe_value);
         r
     }
 }
