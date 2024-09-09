@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 use serde_json::Value;
 use std::collections::HashMap;
+use std::marker::Sized;
 
 #[derive(Clone, Debug)]
 pub struct Function {
@@ -124,6 +125,28 @@ impl PluginManager {
         (commands, callbacks)
     }
 }
+
+// this help move value from dll to app
+#[derive(Clone, Debug)]
+pub struct ResultValue {
+    value: String
+}
+
+impl ResultValue {
+    pub fn new<T>(value: T) -> Self 
+    where
+     T: Sized + serde::Serialize {
+        Self {
+            value: serde_json::to_string(&value).unwrap()
+        }
+    }
+
+    pub fn to_value(&self) -> Value {
+        serde_json::json!(self.value)
+    }
+}
+
+
 
 #[cfg(test)]
 mod tests {

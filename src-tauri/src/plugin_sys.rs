@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use dlopen2::symbor::{Library, SymBorApi, Symbol};
-use rasast_plugin::PluginManager;
+use rasast_plugin::{PluginManager, ResultValue};
 use serde_json::Value;
 
 use crate::get_dir;
@@ -28,7 +28,7 @@ struct Plugin<'a> {
 
 pub fn load_plugin() -> (
     Vec<Value>,
-    HashMap<String, fn(HashMap<String, Value>) -> Value>,
+    HashMap<String, fn(HashMap<String, Value>) -> ResultValue>,
 ) {
     let plugin_dir = get_dir().join("plugins");
     let mut plugin_info = Vec::new();
@@ -73,7 +73,8 @@ pub fn load_plugin() -> (
             if plugin_callback_r.is_err() {
                 continue;
             }
-            let plugin_callback: fn(HashMap<String, Value>) -> Value = *plugin_callback_r.unwrap();
+            let plugin_callback: fn(HashMap<String, Value>) -> ResultValue = *plugin_callback_r.unwrap();
+            println!("load plugin callback test {:?}", plugin_callback(HashMap::new()));
             plugin_callback_hashmap.insert(plugin_callback_name, plugin_callback);
         }
         plugin_info.extend(plugin_info_r);
