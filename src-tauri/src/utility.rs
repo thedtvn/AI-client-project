@@ -32,5 +32,5 @@ pub fn prase_tool_call(input: String) -> Result<Vec<ToolCallFn>, serde_json::Err
         tool.call_id = Some(call_id);
         new_tool_call_with_id.push(tool);
     }
-    new_tool_call_with_id
+    Ok(new_tool_call_with_id)
 }
