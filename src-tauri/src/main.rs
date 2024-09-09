@@ -134,12 +134,11 @@ fn main() {
     env_logger::Builder::new()
         .filter(None, log::LevelFilter::Info)
         .init();
-    let (p_info, p_callback) = load_plugin();
+    let plugin_core = load_plugin();
     let config = get_config(None);
     let mess_list: Arc<Mutex<Vec<MessageType>>> = Arc::new(Mutex::new(Vec::new()));
     tauri::Builder::default()
-        .manage(p_info)
-        .manage(p_callback)
+        .manage(plugin_core)
         .manage(mess_list)
         .manage(Arc::new(Mutex::new(config)))
         .on_window_event(|event| {
@@ -150,6 +149,7 @@ fn main() {
                         let messages: State<Arc<Mutex<Vec<MessageType>>>> = event.window().state();
                         if !config.blocking_lock().save_on_close {
                             messages.blocking_lock().clear();
+                            println!("clear messages");
                         }
                     }
                 }

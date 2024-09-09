@@ -1,7 +1,7 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
-use dlopen2::symbor::{Library, SymBorApi, Symbol};
-use rasast_plugin::{PluginManager, ResultValue};
+use dlopen2::symbor::Library;
+use rasast_plugin::PluginManager;
 use serde_json::Value;
 
 use crate::get_dir;
@@ -21,65 +21,88 @@ fn get_plugin_file_ext() -> String {
     file_extension.to_string()
 }
 
-#[derive(SymBorApi, Debug)]
-struct Plugin<'a> {
-    init: Symbol<'a, fn() -> PluginManager>
+#[derive(Clone)]
+pub struct PluginCore {
+    plugin_lib: HashMap<String, Arc<Library>>,
+    map_func: HashMap<String, String>,
+    plugin_info: Vec<Value>
 }
 
-pub fn load_plugin() -> (
-    Vec<Value>,
-    HashMap<String, fn(HashMap<String, Value>) -> ResultValue>,
-) {
+impl PluginCore {
+    pub fn new() -> Self {
+        Self {
+            plugin_lib: HashMap::new(),
+            map_func: HashMap::new(),
+            plugin_info: Vec::new(),
+        }
+    }
+
+    pub fn add_plugin(&mut self, file_path: PathBuf, file_name: String) -> Result<(), String> {
+        let plugin_r = Library::open(file_path);
+        if plugin_r.is_err() {
+            eprintln!("load plugin {:?} error", plugin_r.err().unwrap());
+            return Err(format!("load plugin {} error", file_name));
+        }
+        let plugin = plugin_r.unwrap();
+        let init_func_r = unsafe { plugin.symbol::<fn() -> PluginManager>("init") };
+        if init_func_r.is_err() {
+            return Err(format!("load plugin {} error init func not found", file_name));
+        }
+        let init_func = init_func_r.unwrap()();
+        self.plugin_lib.insert(init_func.id.clone(), Arc::new(plugin));
+        let (info_vec, callback_list) = init_func.get_commands();
+        self.plugin_info.extend(info_vec);
+        for i in callback_list {
+            self.map_func.insert(i, init_func.id.clone());
+        }
+        Ok(())
+    }
+
+    pub fn get_plugin_info(&self) -> Vec<Value> {
+        self.plugin_info.clone()
+    }
+
+    pub fn call_fn(&self, name: &str, args: HashMap<String, Value>) -> ResultValue {
+        let id = self.map_func.get(name).unwrap();
+        let plugin = self.plugin_lib.get(id).unwrap();
+        let func_r = unsafe { plugin.symbol::<fn(HashMap<String, Value>) -> Value>(name) };
+        if func_r.is_err() {
+            panic!("func not found");
+        }
+        let func = func_r.unwrap();
+        let r = func(args);
+        r
+    }
+}
+
+
+pub fn load_plugin() -> PluginCore {
     let plugin_dir = get_dir().join("plugins");
-    let mut plugin_info = Vec::new();
-    let mut plugin_callback = HashMap::new();
+    let mut plugin_core = PluginCore::new();
     if !plugin_dir.exists() {
         eprintln!("create plugin dir");
         let create_dir_r = std::fs::create_dir(&plugin_dir);
         if create_dir_r.is_err() {
             eprintln!("create plugin dir error skip load plugin");
-            return (plugin_info, plugin_callback);
+            return plugin_core;
         }
     }
     let plugins_dir_list = std::fs::read_dir(plugin_dir);
     if plugins_dir_list.is_err() {
         eprintln!("read plugin dir error skip load plugin");
-        return (plugin_info, plugin_callback);
+        return plugin_core;
     }
     let file_extension = get_plugin_file_ext();
     for file in plugins_dir_list.unwrap() {
         let path = file.unwrap().path();
         let file_name = path.file_name().unwrap().to_string_lossy();
         if !file_name.ends_with(file_extension.as_str()) { continue; }
-        let plugin_r = Library::open(path.clone());
-        if plugin_r.is_err() {
-            eprintln!("load plugin {:?} error", plugin_r.err().unwrap());
-            eprintln!("load plugin {} error", file_name);
+        let err = plugin_core.add_plugin(path.clone(), file_name.to_string());
+        if err.is_err() {
+            eprintln!("{}", err.err().unwrap());
             continue;
         }
-        let plugin = plugin_r.unwrap();
-        let plugin_api_r = unsafe{ Plugin::load(&plugin)};
-        if plugin_api_r.is_err() {
-            eprintln!("load plugin {:?} error", plugin_api_r.unwrap_err());
-            eprintln!("load plugin {} error", file_name);
-            continue;
-        }
-        let plugin_api = plugin_api_r.unwrap();
-        let plugin_manager = (plugin_api.init)();
-        let (plugin_info_r, plugin_callback_vec) = plugin_manager.get_commands();
-        let mut plugin_callback_hashmap = HashMap::new();
-        for plugin_callback_name in plugin_callback_vec {
-            let plugin_callback_r = unsafe { plugin.symbol(plugin_callback_name.as_str()) };
-            if plugin_callback_r.is_err() {
-                continue;
-            }
-            let plugin_callback: fn(HashMap<String, Value>) -> ResultValue = *plugin_callback_r.unwrap();
-            println!("load plugin callback test {:?}", plugin_callback(HashMap::new()));
-            plugin_callback_hashmap.insert(plugin_callback_name, plugin_callback);
-        }
-        plugin_info.extend(plugin_info_r);
-        plugin_callback.extend(plugin_callback_hashmap);
     }
-    println!("load plugin {}", plugin_info.len());
-    (plugin_info, plugin_callback)
+    println!("load plugin {} success", plugin_core.get_plugin_info().len());
+    plugin_core
 }

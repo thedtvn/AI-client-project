@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tauri::{Manager, State};
 
+use crate::plugin_sys::PluginCore;
+
 #[allow(dead_code)]
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum MessageType {
@@ -69,7 +71,8 @@ fn get_filtered_messages(messages: Vec<MessageType>) -> (Vec<SystemMessage>, Vec
 
 pub fn tokenize_messages(mut messages: Vec<MessageType>, app: tauri::AppHandle) -> String {
     inject_system_prompt(&mut messages);
-    let tool_available: State<Vec<Value>> = app.state();
+    let tool_available_s: State<PluginCore> = app.state();
+    let tool_available = tool_available_s.get_plugin_info();
     let mut text = String::new();
     text.push_str("<s>");
     let (system_messages, filtered_messages) = get_filtered_messages(messages.clone());
@@ -79,8 +82,7 @@ pub fn tokenize_messages(mut messages: Vec<MessageType>, app: tauri::AppHandle) 
         if let MessageType::User(user_message) = message {
             if idx <= last_user_idx && !tool_available.is_empty() {
                 text.push_str("[AVAILABLE_TOOLS]");
-                let list_tool = tool_available.inner();
-                let tool_available_str = serde_json::to_string(&list_tool).unwrap();
+                let tool_available_str = serde_json::to_string(&tool_available).unwrap();
                 text.push_str(&tool_available_str);
                 text.push_str("[/AVAILABLE_TOOLS]");
             }

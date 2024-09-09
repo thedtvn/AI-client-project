@@ -1,15 +1,13 @@
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 
 use eventsource_stream::EventStream;
 use futures_core::future::BoxFuture;
 use futures_util::{FutureExt as _, StreamExt as _};
-use rasast_plugin::ResultValue;
 use reqwest::header;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use tauri::{async_runtime::Mutex, Manager as _, State};
 
-use crate::{serde_obj::MessageEventPayload, tokenizer::*, utility::{get_response_token, prase_tool_call}};
+use crate::{plugin_sys::PluginCore, serde_obj::MessageEventPayload, tokenizer::*, utility::{get_response_token, prase_tool_call}};
 
 async fn crate_client() -> reqwest::Client {
     let mut headers = header::HeaderMap::new();
@@ -110,10 +108,10 @@ async fn get_response_text_async(promt: String, app: tauri::AppHandle, messages_
     let tool_calls = prase_tool_call(vec.join(""));
     let tool_call_str = serde_json::to_string(&tool_calls).unwrap();
     messages.push(MessageType::ToolCall(ToolCall { content: tool_call_str }));
-    let p_callbacks: State<HashMap<String, fn(HashMap<String, Value>) -> ResultValue>> = app.state();
+    let p_callbacks: State<PluginCore> = app.state();
     for tool_call in tool_calls {
-        let call = p_callbacks.get(&tool_call.name).unwrap();
-        let tool_response = call(tool_call.arguments);
+        let tool_response = p_callbacks.call_fn(&tool_call.name, tool_call.arguments.clone());
+        println!("tool_response: {:?}", tool_response.to_value());
         messages.push(MessageType::ToolResponse(ToolResponse { content: tool_response.to_value(), call_id: tool_call.call_id }));
     }
     let promt = tokenize_messages(messages.clone(), app.clone());
