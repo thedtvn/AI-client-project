@@ -145,12 +145,9 @@ fn main() {
             let config: State<Arc<Mutex<serde_obj::ConfigFile>>> = event.window().state();
             match event.event() {
                 tauri::WindowEvent::Destroyed => {
-                    if event.window().label() == "main" && config.blocking_lock().save_on_close {
+                    if event.window().label() == "main" && !config.blocking_lock().save_on_close {
                         let messages: State<Arc<Mutex<Vec<MessageType>>>> = event.window().state();
-                        if !config.blocking_lock().save_on_close {
-                            messages.blocking_lock().clear();
-                            println!("clear messages");
-                        }
+                        messages.blocking_lock().clear();
                     }
                 }
                 tauri::WindowEvent::Resized(size) => {
