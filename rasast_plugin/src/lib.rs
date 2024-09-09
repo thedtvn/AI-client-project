@@ -6,8 +6,7 @@ use std::collections::HashMap;
 pub struct Function {
     name: String,
     description: String,
-    parameters: Vec<ArgsInfo>,
-    callback: fn(HashMap<String, Value>) -> Value,
+    parameters: Vec<ArgsInfo>
 }
 
 impl Function {
@@ -15,13 +14,11 @@ impl Function {
         name: &str,
         description: &str,
         parameters: Vec<ArgsInfo>,
-        callback: fn(HashMap<String, Value>) -> Value,
     ) -> Self {
         Self {
             name: name.to_string(),
             description: description.to_string(),
-            parameters,
-            callback,
+            parameters
         }
     }
 
@@ -116,12 +113,12 @@ impl PluginManager {
         &self,
     ) -> (
         Vec<Value>,
-        HashMap<String, fn(HashMap<String, Value>) -> Value>,
+        Vec<String>,
     ) {
         let mut commands = Vec::new();
-        let mut callbacks = HashMap::new();
+        let mut callbacks = Vec::new();
         for command in self.commands.clone() {
-            callbacks.insert(command.name.clone(), command.callback);
+            callbacks.push(command.name.clone());
             commands.push(command.to_value());
         }
         (commands, callbacks)
@@ -131,16 +128,6 @@ impl PluginManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn callback_test(input: HashMap<String, Value>) -> Value {
-        let _ = input;
-        Value::String("test".to_string())
-    }
-
-    fn callback_test2(input: HashMap<String, Value>) -> Value {
-        let _ = input;
-        Value::String("test2".to_string())
-    }
 
     #[test]
     fn it_works() {
@@ -155,8 +142,7 @@ mod tests {
         let command = Function::new(
             "test",
             "test",
-            parameters,
-            callback_test,
+            parameters
         );
         manager.add_command(command);
         let mut parameters2 = Vec::new();
@@ -169,8 +155,7 @@ mod tests {
         let commamd2 = Function::new(
             "test2",
             "test2",
-            parameters2,
-            callback_test2,
+            parameters2
         );
         manager.add_command(commamd2);
         let (commands, callbacks) = manager.get_commands();

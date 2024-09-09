@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use dlopen2::wrapper::{Container, WrapperApi};
+use dlopen2::symbor::{Library, SymBorApi, Symbol};
 use rasast_plugin::PluginManager;
 use serde_json::Value;
 
@@ -21,9 +21,9 @@ fn get_plugin_file_ext() -> String {
     file_extension.to_string()
 }
 
-#[derive(WrapperApi)]
-struct Plugin {
-    init: fn() -> PluginManager
+#[derive(SymBorApi, Debug)]
+struct Plugin<'a> {
+    init: Symbol<'a, fn() -> PluginManager>
 }
 
 pub fn load_plugin() -> (
@@ -51,17 +51,33 @@ pub fn load_plugin() -> (
         let path = file.unwrap().path();
         let file_name = path.file_name().unwrap().to_string_lossy();
         if !file_name.ends_with(file_extension.as_str()) { continue; }
-
-        let plugin_r = unsafe { Container::load(path.clone()) };
+        let plugin_r = Library::open(path.clone());
         if plugin_r.is_err() {
+            eprintln!("load plugin {:?} error", plugin_r.err().unwrap());
             eprintln!("load plugin {} error", file_name);
             continue;
         }
-        let plugin: Container<Plugin> = plugin_r.unwrap();
-        let plugin_manager = plugin.init();
-        let (plugin_info_r, plugin_callback_r) = plugin_manager.get_commands();
+        let plugin = plugin_r.unwrap();
+        let plugin_api_r = unsafe{ Plugin::load(&plugin)};
+        if plugin_api_r.is_err() {
+            eprintln!("load plugin {:?} error", plugin_api_r.unwrap_err());
+            eprintln!("load plugin {} error", file_name);
+            continue;
+        }
+        let plugin_api = plugin_api_r.unwrap();
+        let plugin_manager = (plugin_api.init)();
+        let (plugin_info_r, plugin_callback_vec) = plugin_manager.get_commands();
+        let mut plugin_callback_hashmap = HashMap::new();
+        for plugin_callback_name in plugin_callback_vec {
+            let plugin_callback_r = unsafe { plugin.symbol(plugin_callback_name.as_str()) };
+            if plugin_callback_r.is_err() {
+                continue;
+            }
+            let plugin_callback: fn(HashMap<String, Value>) -> Value = *plugin_callback_r.unwrap();
+            plugin_callback_hashmap.insert(plugin_callback_name, plugin_callback);
+        }
         plugin_info.extend(plugin_info_r);
-        plugin_callback.extend(plugin_callback_r);
+        plugin_callback.extend(plugin_callback_hashmap);
     }
     println!("load plugin {}", plugin_info.len());
     (plugin_info, plugin_callback)
