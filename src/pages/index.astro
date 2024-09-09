@@ -65,7 +65,9 @@ import SendButton from "../components/send_btn.astro";
 			input.value = "";
 			message_map[id] = bot_message;
 			chat_container.scrollTop = chat_container.scrollHeight;
-			await invoke("new_message", { prompt: content, id });
+			try {
+				await invoke("new_message", { prompt: content, id });
+			} catch (error) {}
 			send.disabled = false;
 		});
 	</script>

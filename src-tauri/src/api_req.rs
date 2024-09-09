@@ -80,6 +80,15 @@ async fn get_response_text_async(promt: String, app: tauri::AppHandle, messages_
                     continue;
                 } else if token.special && token.text == "</s>" {
                     break;
+                } else if token.special && vec!["<unk>"].contains(&token.text.as_str()) {
+                    let _ = app.emit_all(
+                        "message",
+                        MessageEventPayload {
+                            data: "Unknown ?".to_string(),
+                            uuid: messages_uuid.clone(),
+                        },
+                    );
+                    break;
                 }
                 index += 1;
                 vec.push(token.text);
