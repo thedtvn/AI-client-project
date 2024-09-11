@@ -115,6 +115,13 @@ async fn get_response_text_async(promt: String, app: tauri::AppHandle, messages_
     }
     let tool_calls_r = prase_tool_call(vec.join(""));
     if tool_calls_r.is_err() {
+        let _ = app.emit_all(
+            "message",
+            MessageEventPayload {
+                data: "Cannot parse tool call 😵".to_string(),
+                uuid: messages_uuid.clone(),
+            },
+        );
         return;
     }
     let tool_calls = tool_calls_r.unwrap();
